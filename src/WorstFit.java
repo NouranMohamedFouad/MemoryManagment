@@ -1,2 +1,124 @@
-package PACKAGE_NAME;public class WorstFit {
-}
+
+import java.util.ArrayList;
+ public class WorstFit
+ {
+     private ArrayList<Partition> partitions=new ArrayList<>();
+     private int allocation[];
+
+     public void WorstFit(ArrayList<Partition> partition,int PartitionNum,Process process[],int ProcessNum)
+     {
+
+         allocation=new int[ProcessNum];
+         partitions=partition;
+         /////////////////////////////////
+
+         for (int i = 0; i < ProcessNum; i++) {
+             allocation[i] = -1;
+         }
+         /////////////////////////////////
+         for (int i = 0; i < PartitionNum; i++) {
+             partitions.get(i).setContent(" ");
+         }
+         //////////////////////////////////
+         int maxValue=Integer.MIN_VALUE;
+         int maxIndex=Integer.MIN_VALUE;
+
+         for (int i = 0; i < ProcessNum; i++)
+         {
+             for(int k=0;k<partitions.size();k++)
+             {
+                 if(partitions.get(k).getSize()>maxValue && partitions.get(k).getSize() >= process[i].getSize() && partitions.get(k).getContent()== " ")
+                 {
+                     maxValue=partitions.get(k).getSize();
+                     maxIndex=k;
+                 }
+             }
+             for (int j=0;j<partitions.size();j++)
+             {
+                 if(partitions.get(maxIndex).getContent()== " ")
+                 {
+                     allocation[i]=maxIndex;
+                     partitions.get(maxIndex).setContent(process[i].getName() + "  (" + process[i].getSize() + " KB)");
+                     //////////////////////////////////////////////////////////
+                     if (maxValue > process[i].getSize())
+                     {
+                         partitions.add(maxIndex+1,new Partition("partition"+PartitionNum++, partitions.get(maxIndex).getSize() - process[i].getSize()));
+                         partitions.get(maxIndex+1).setContent(" ");
+                     }
+                     partitions.get(maxIndex).setSize(process[i].getSize());
+                     maxValue=Integer.MIN_VALUE;
+                     break;
+                 }
+             }
+         }
+         ///////////////////////////////////
+         for (int i = 0; i < partitions.size(); i++)
+         {
+             if (partitions.get(i).getContent() == " ") {
+                 partitions.get(i).setContent("External Fragment");
+             }
+         }
+     }
+     ////////////////////////////////////////////////////////////////////////////////////////
+     public void display(ArrayList<Partition> partition,int PartitionNum,Process process[],int ProcessNum)
+     {
+         partitions=partition;
+         WorstFit(partitions,PartitionNum,process,ProcessNum);
+         for(int i = 0; i <partitions.size(); i++)
+         {
+             System.out.println(" "+partitions.get(i).getName()+" ( "+partitions.get(i).getSize()+" KB)  ==> " +partitions.get(i).getContent());
+         }
+         //////////////////////////////////
+         for(int i = 0; i <ProcessNum; i++)
+         {
+             if(allocation[i]==-1)
+             {
+                 System.out.println(" " + process[i].getName() + " is Not Allocated");
+             }
+         }
+     }
+     /////////////////////////////////////////////////////////////////////
+     public void compaction( ArrayList<Partition> partitions,int PartitionNum,Process process[],int ProcessNum)
+     {
+         int totalSize = 0;
+         for(int i=0;i<partitions.size();i++)
+         {
+             if(partitions.get(i).getContent()=="External Fragment")
+             {
+                 totalSize+=partitions.get(i).getSize();
+             }
+         }
+         partitions.add(partitions.size(),new Partition("partition"+partitions.size(),totalSize));
+
+         partitions.get((partitions.size()-1)).setContent(" ");
+         int highestCompated=partitions.size()-1;
+
+         WorstFit(partitions,partitions.size(),process,ProcessNum);
+
+         int i=0;
+         String compactedPartition=("partition"+highestCompated);
+
+         while(i < partitions.size())
+         {
+             if(partitions.get(i).getName().equals(compactedPartition))
+             {
+                 break;
+             }
+             else if(partitions.get(i).getContent().equals("External Fragment"))
+             {
+                 partitions.remove(i);
+             }
+             else
+             {
+                 i++;
+             }
+         }
+         for (int j= 0; j< partitions.size(); j++)
+         {
+             System.out.println(" "+partitions.get(j).getName()+" ( "+partitions.get(j).getSize()+" KB)  ==> " +partitions.get(j).getContent());
+         }
+     }
+ }
+
+
+
